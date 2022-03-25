@@ -21,7 +21,7 @@
 
 ## This is an implementation of several integral attacks on round reduced versions of PRINCE (see [1]) as they were described in the original papers [2],[3] and [4].
 
-## The first section handels the reference implementation of PRINCE.
+## The first section handles the reference implementation of PRINCE.
 ## Each one of the remaining sections provides one attack on round reduced version of PRINCE.
 ## Square4BasicSingle(secret_key) ... A basic attack on 4-round reduced version of PRINCE. Recoveres one nibble of the key (k'_0 ^ k_1).
 ## Square4BasicFull(secret_key) ... A basic attack on 4-round reduced version of PRINCE. Recoveres the whole key k_0, k_1.
