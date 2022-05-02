@@ -1,6 +1,6 @@
 ## Integral attacks on round reduced version of PRINCE
 ## Author: David Tvrdý
-## Last edited: 25.03.2022
+## Last edited: 02.05.2022
 
 
 
@@ -27,14 +27,14 @@
 ## Square4BasicFull(secret_key) ... A basic attack on 4-round reduced version of PRINCE. Recovers the whole key k_0, k_1.
 ## Square4ArraysFull(secret_key) ... An advanced attack on 4-round reduced version of PRINCE which uses the faster key recovery technique. Recovers the whole key k_0, k_1.
 ## Square5ArraysFull(secret_key)... An advanced attack on 5-round reduced version of PRINCE which uses the faster key recovery technique. Recovers the whole key k_0, k_1.
+## Square5ArraysFullNew(secret_key) ... The same as the previous attack but using a new, more efficient 4.5-round distinguisher.
 
 
 
 
 
 
-
-## ------------- PART ONE -------------- ##
+## ------------- SECTION ONE -------------- ##
 ## PRINCE reference implementation
 ## ----------------------------------------
 
@@ -903,7 +903,7 @@ def Square4ArraysFull(secret_key):
 
 
 ## ------------- SECTION FIVE -------------- ##
-## Integral attacks on round-reduced Prince: 5 Rounds, Faster key recovery Version, Full key
+## Integral attacks on round-reduced Prince: 5 Rounds, Faster key recovery version, Full key, The original distinguisher
 ## ----------------------------------------
 
 
@@ -918,7 +918,7 @@ def Square4ArraysFull(secret_key):
 
 ## ----------------------------------------------------------------------
 ## -------------------- five round square attack ------------------------
-## -- version using arrays instead of ciphertexts, full key recovery
+## -- version using arrays instead of ciphertexts, full key recovery, the original distinguisher
 
 
 def Square5ArraysFull(secret_key):
@@ -1160,8 +1160,259 @@ def Square5ArraysFull(secret_key):
 
 
 
+
+## ------------- SECTION SIX -------------- ##
+## Integral attacks on round-reduced Prince: 5 Rounds - NEW ATTACK, Faster key recovery version, Full key
+## ----------------------------------------
+
+
+
+
+
+
+## ----------------------------------------------------------------------
+## -------------------- five round square attack ------------------------
+## -- version using arrays instead of ciphertexts, full key recovery, new attack
+
+
+def Square5ArraysFullNew(secret_key):
+    
+    SBox = [0xb,0xf,0x3,0x2,0xa,0xc,0x9,0x1,0x6,0x7,0x8,0x0,0xe,0x5,0xd,0x4]
+    InvSBox = [0xb,0x7,0x3,0x2,0xf,0xd,0x8,0x9,0xa,0x6,0x4,0x0,0x5,0xe,0xc,0x1]
+    ## round constants
+    RC = [
+        [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
+        [0x1, 0x3, 0x1, 0x9, 0x8, 0xa, 0x2, 0xe, 0x0, 0x3, 0x7, 0x0, 0x7, 0x3, 0x4, 0x4],
+        [0xa, 0x4, 0x0, 0x9, 0x3, 0x8, 0x2, 0x2, 0x2, 0x9, 0x9, 0xf, 0x3, 0x1, 0xd, 0x0],
+        [0x0, 0x8, 0x2, 0xe, 0xf, 0xa, 0x9, 0x8, 0xe, 0xc, 0x4, 0xe, 0x6, 0xc, 0x8, 0x9],
+        [0x4, 0x5, 0x2, 0x8, 0x2, 0x1, 0xe, 0x6, 0x3, 0x8, 0xd, 0x0, 0x1, 0x3, 0x7, 0x7],
+        [0xb, 0xe, 0x5, 0x4, 0x6, 0x6, 0xc, 0xf, 0x3, 0x4, 0xe, 0x9, 0x0, 0xc, 0x6, 0xc],
+        [0x7, 0xe, 0xf, 0x8, 0x4, 0xf, 0x7, 0x8, 0xf, 0xd, 0x9, 0x5, 0x5, 0xc, 0xb, 0x1],
+        [0x8, 0x5, 0x8, 0x4, 0x0, 0x8, 0x5, 0x1, 0xf, 0x1, 0xa, 0xc, 0x4, 0x3, 0xa, 0xa],
+        [0xc, 0x8, 0x8, 0x2, 0xd, 0x3, 0x2, 0xf, 0x2, 0x5, 0x3, 0x2, 0x3, 0xc, 0x5, 0x4],
+        [0x6, 0x4, 0xa, 0x5, 0x1, 0x1, 0x9, 0x5, 0xe, 0x0, 0xe, 0x3, 0x6, 0x1, 0x0, 0xd],
+        [0xd, 0x3, 0xb, 0x5, 0xa, 0x3, 0x9, 0x9, 0xc, 0xa, 0x0, 0xc, 0x2, 0x3, 0x9, 0x9],
+        [0xc, 0x0, 0xa, 0xc, 0x2, 0x9, 0xb, 0x7, 0xc, 0x9, 0x7, 0xc, 0x5, 0x0, 0xd, 0xd]
+    ]
+ 
+    ## ----------------------------------------------------------------------
+    
+    rounds = 5  
+    extended_key = KeySchedule(secret_key)
+    print('5 round square attack with arrays - full key recovery')
+    print('Target key :', hex(secret_key[1] ^ extended_key))
+    print('Target key :', hex(secret_key[0]), hex(secret_key[1]))
+    print('-----------------------')
+    
+    start = time.time()
+    s_box_count = 0
+        
+    
+    #### PART 1 - k0'^k1 recovery ################################
+    print('\n************Part one************\n-----------------------')
+    
+    key_candidates = []
+    A_array = []
+    for i in range(16): key_candidates.append([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+    key_count = [16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16]
+    for i in range(16): A_array.append([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+
+    const = random.randint(0x0,0xffffffffffff)
+    ready = False
+
+    while not ready:
+        const += 1
+        if const > 0xffffffffffff: const = 0x0
+        ## create PT sets
+        
+        for i in range(2**8):
+          for ii in range(2):
+            for iii in range(2): 
+              pt = (i << 56) + (ii << 52) + (iii << 48) + const             
+            
+              ## encrypt the PTs and flip the corresponding bit of the A-array
+              ct = Encrypt(secret_key, pt, rounds)
+              s_box_count += 16*rounds
+              
+              for j in range(16):
+                  flip = (ct >> 4*(15 - j)) & 0xf
+                  A_array[j][flip] ^= 1
+
+        ## guess a nibble of (k0' ^ k1) .... all nibbles
+        for nibble in range(16):
+            if key_count[nibble] > 1:
+                for k in range(16):
+                    if key_candidates[nibble][k] == 1:
+                        ## patrially decrypt all ciphertexts and check the XOR property
+                        s = 0
+                        for i in range(16):
+                            if A_array[nibble][i] == 1:
+                                s ^= SBox[i ^ k ^ RC[11][nibble]]
+                                s_box_count += 1
+                                
+                        if s == 0: print('Key candidate', hex(k), 'of nibble', nibble)
+                        else: 
+                            key_candidates[nibble][k] = 0
+                            key_count[nibble] -= 1
+
+        ready = True
+        for i in range(16):
+            if key_count[i] > 1: 
+                ready = False
+                break
+
+        if not ready: print('several key candidates left\n-----------------------') 
+        
+    end = time.time()
+    final_key_last = 0x0
+    
+    for nibble in range(16):
+        for i in range(16): 
+            if key_candidates[nibble][i] == 1: 
+                final_key_last = (final_key_last << 4) + i
+                
+    print('Recovered key - last round key :', hex(final_key_last))
+    print('Run time:', end - start) 
+    print('S Box Count :', s_box_count)
+    
+    
+    #### PART 2 - k1 recovery ######################################
+    print('\n************Part two************\n-----------------------')
+    
+    key_candidates = []
+    A_array = []
+    for i in range(16): key_candidates.append([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+    key_count = [16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16]
+    for i in range(16): A_array.append([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+    
+    const = random.randint(0x0,0xfffffffffffffff)
+    ready = False
+
+    while not ready:
+        const += 1  
+        if const > 0xfffffffffffffff: const = 0x0      
+        ## create PT sets
+        
+        for i in range(16): 
+          pt = (const << 4) + i
+        
+          ## encrypt
+          temp_c = Encrypt(secret_key, pt, rounds)  
+          s_box_count += 16*rounds
+          
+          
+          ## peel of the last round
+          temp_c ^= final_key_last    
+          
+          A = [] 
+          
+          ## create nibbles    
+          for j in range(16):
+              a = (temp_c >> (60 - j * 4)) & 0xf               
+              A.append(a)
+              
+          ## round constant and S-layer   
+          for j in range(16): A[j] = A[j] ^ RC[11][j]
+          for j in range(16): A[j] = SBox[A[j]] 
+          s_box_count += 16
+          
+          ## MPrime    
+          T = []
+          for j in range(16): T.append(0x0)
+          for j in range(2):                
+              T[0 + 12 * j] = ((A[1 + 12 * j] ^ A[2 + 12 * j] ^ A[3 + 12 * j]) & 0x8) + ((A[0 + 12 * j] ^ A[2 + 12 * j] ^ A[3 + 12 * j]) & 0x4) + ((A[0 + 12 * j] ^ A[1 + 12 * j] ^ A[3 + 12 * j]) & 0x2) + ((A[0 + 12 * j] ^ A[1 + 12 * j] ^ A[2 + 12 * j]) & 0x1)
+              T[1 + 12 * j] = ((A[0 + 12 * j] ^ A[1 + 12 * j] ^ A[2 + 12 * j]) & 0x8) + ((A[1 + 12 * j] ^ A[2 + 12 * j] ^ A[3 + 12 * j]) & 0x4) + ((A[0 + 12 * j] ^ A[2 + 12 * j] ^ A[3 + 12 * j]) & 0x2) + ((A[0 + 12 * j] ^ A[1 + 12 * j] ^ A[3 + 12 * j]) & 0x1)
+              T[2 + 12 * j] = ((A[0 + 12 * j] ^ A[1 + 12 * j] ^ A[3 + 12 * j]) & 0x8) + ((A[0 + 12 * j] ^ A[1 + 12 * j] ^ A[2 + 12 * j]) & 0x4) + ((A[1 + 12 * j] ^ A[2 + 12 * j] ^ A[3 + 12 * j]) & 0x2) + ((A[0 + 12 * j] ^ A[2 + 12 * j] ^ A[3 + 12 * j]) & 0x1)
+              T[3 + 12 * j] = ((A[0 + 12 * j] ^ A[2 + 12 * j] ^ A[3 + 12 * j]) & 0x8) + ((A[0 + 12 * j] ^ A[1 + 12 * j] ^ A[3 + 12 * j]) & 0x4) + ((A[0 + 12 * j] ^ A[1 + 12 * j] ^ A[2 + 12 * j]) & 0x2) + ((A[1 + 12 * j] ^ A[2 + 12 * j] ^ A[3 + 12 * j]) & 0x1)                        
+              T[4 + 4 * j] = ((A[4 + 4 * j] ^ A[5 + 4 * j] ^ A[6 + 4 * j]) & 0x8) + ((A[5 + 4 * j] ^ A[6 + 4 * j] ^ A[7 + 4 * j]) & 0x4) + ((A[4 + 4 * j] ^ A[6 + 4 * j] ^ A[7 + 4 * j]) & 0x2) + ((A[4 + 4 * j] ^ A[5 + 4 * j] ^ A[7 + 4 * j]) & 0x1)
+              T[5 + 4 * j] = ((A[4 + 4 * j] ^ A[5 + 4 * j] ^ A[7 + 4 * j]) & 0x8) + ((A[4 + 4 * j] ^ A[5 + 4 * j] ^ A[6 + 4 * j]) & 0x4) + ((A[5 + 4 * j] ^ A[6 + 4 * j] ^ A[7 + 4 * j]) & 0x2) + ((A[4 + 4 * j] ^ A[6 + 4 * j] ^ A[7 + 4 * j]) & 0x1)
+              T[6 + 4 * j] = ((A[4 + 4 * j] ^ A[6 + 4 * j] ^ A[7 + 4 * j]) & 0x8) + ((A[4 + 4 * j] ^ A[5 + 4 * j] ^ A[7 + 4 * j]) & 0x4) + ((A[4 + 4 * j] ^ A[5 + 4 * j] ^ A[6 + 4 * j]) & 0x2) + ((A[5 + 4 * j] ^ A[6 + 4 * j] ^ A[7 + 4 * j]) & 0x1)
+              T[7 + 4 * j] = ((A[5 + 4 * j] ^ A[6 + 4 * j] ^ A[7 + 4 * j]) & 0x8) + ((A[4 + 4 * j] ^ A[6 + 4 * j] ^ A[7 + 4 * j]) & 0x4) + ((A[4 + 4 * j] ^ A[5 + 4 * j] ^ A[7 + 4 * j]) & 0x2) + ((A[4 + 4 * j] ^ A[5 + 4 * j] ^ A[6 + 4 * j]) & 0x1)              
+          for i in range(16): A[i] = T[i]
+              
+          ## shift rows 
+          temp = A[1]
+          for j in range(3): A[1 + 4*j] = A[5 + 4*j]
+          A[13] = temp
+          temp = A[2]
+          A[2] = A[10]
+          A[10] = temp
+          temp = A[6]
+          A[6] = A[14]
+          A[14] = temp
+          temp = A[15]
+          for j in range(3): A[15 - 4*j] = A[11 - 4*j]
+          A[3] = temp     
+          
+          ## round constant and S-layer   
+          for j in range(16): A[j] = A[j] ^ RC[10][j]   
+              
+          ## flip the corresponding A_array bit
+          for j in range(16): A_array[j][A[j]] ^= 1
+          
+
+        ## guess a nibble of (k1) .... all nibbles
+        for nibble in range(16):
+            if key_count[nibble] > 1:
+                for k in range(16):
+                    if key_candidates[nibble][k] == 1:
+                        ## patrially decrypt all ciphertexts and check the XOR property                        
+                        s = 0
+                        for i in range(16):
+                            if A_array[nibble][i] == 1:
+                                s ^= SBox[i ^ k]
+                                s_box_count += 1
+                                
+                        if s == 0: print('Key candidate', hex(k), 'of nibble', nibble)
+                        else: 
+                            key_candidates[nibble][k] = 0
+                            key_count[nibble] -= 1
+
+        ready = True
+        for i in range(16):
+            if key_count[i] > 1: 
+                ready = False
+                break
+
+        if not ready: print('several key candidates left\n-----------------------') 
+        
+    end = time.time()
+    final_key_1 = 0x0
+    
+    for nibble in range(16):
+        for i in range(16): 
+            if key_candidates[nibble][i] == 1: 
+                final_key_1 = (final_key_1 << 4) + i
+                
+    print('Recovered key - k1 :', hex(final_key_1))
+    print('Run time:', end - start)      
+    print('S Box Count :', s_box_count)
+    
+    
+    #### PART 3 - k0 recovery ######################################
+    print('\n************Part three************\n-----------------------')
+    final_key_extended = final_key_last ^ final_key_1
+    bit_high = final_key_extended >> 63
+    bit_xor = (final_key_extended >> 62) & 0x1
+    final_key_0 = (((final_key_extended << 1) + bit_high) ^ (bit_xor << 1)) & 0xffffffffffffffff
+    end = time.time()
+        
+    print('Recovered key - k0 :', hex(final_key_0))
+    print('-----------------------')
+    print('Target key :', hex(secret_key[0]), hex(secret_key[1]))
+    print('Recovered key :', hex(final_key_0), hex(final_key_1))
+
+    print('Run time:', end - start)  
+    print('S Box Count :', s_box_count)
+
+
+
+
+
+
 ######################################################## TEST
 #Square4BasicSingle([random.randint(0x0,0xffffffffffffffff), random.randint(0x0, 0xffffffffffffffff)])
 #Square4BasicFull([random.randint(0x0,0xffffffffffffffff), random.randint(0x0,0xffffffffffffffff)])
 #Square4ArraysFull([random.randint(0x0,0xffffffffffffffff), random.randint(0x0,0xffffffffffffffff)])
 #Square5ArraysFull([random.randint(0x0,0xffffffffffffffff), random.randint(0x0,0xffffffffffffffff)])
+#Square5ArraysFullNew([random.randint(0x0,0xffffffffffffffff), random.randint(0x0,0xffffffffffffffff)])
