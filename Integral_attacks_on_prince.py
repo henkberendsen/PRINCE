@@ -13,13 +13,13 @@
 ## Proceedings of the Romanian Academy - Series A: Mathematics, Physics, Technical Sciences, Information Science, 16:265–269, 01 2015.
 ## [4] S. Rasoolzadeh and H. Raddum. Faster key recovery attack on round-reduced PRINCE. 
 ## In Andrey Bogdanov, editor, Lightweight Cryptography for Security and Privacy - 5th International Workshop, LightSec 2016, Aksaray, Turkey, September 21-22, 2016, Revised Selected Papers, volume 10098 of Lecture Notes in Computer Science, pages 3–17. Springer, 2016.
-
+## [5] TVRDÝ, David. Cryptanalytic attacks on the cipher PRINCE. Praha, 2022. Diplomová práce. Univerzita Karlova, Matematicko-fyzikální fakulta, Katedra algebry. Vedoucí práce Göloglu, Faruk.
 
 
 ## ----------- Instructions ------------ ##
 ## ----------------------------------------
 
-## This is an implementation of several integral attacks on round reduced versions of PRINCE (see [1]) as they were described in the original papers [2],[3] and [4].
+## This is an implementation of several integral attacks on round reduced versions of PRINCE (see [1]) as they were described in the original papers [2],[3],[4] and [5].
 
 ## The first section provides the reference implementation of PRINCE.
 ## Each one of the remaining sections provides one attack on round reduced version of PRINCE.
