@@ -1,6 +1,6 @@
 ## Integral attacks on round reduced version of PRINCE
 ## Author: David Tvrdý
-## Last edited: 05.05.2022
+## Last edited: 12.12.2023
 
 
 
